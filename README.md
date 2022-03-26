@@ -38,7 +38,7 @@ python run.py --data 0 --gpu 0 --settings 2 --aligned-prop 1.0 --complete-prop 1
 
     **Parameters**: More parameters and descriptions can be found in the script.
 
-    **Training Log**: The training log will be saved in `log/" dataset_name"+ log`.
+    **Training Log**: The training log will be saved in `log/`
 
 ## Citation
 
