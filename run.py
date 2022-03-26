@@ -13,7 +13,7 @@ from data_loader import loader
 
 
 parser = argparse.ArgumentParser(description='MvCLN in PyTorch')
-parser.add_argument('--data', default='6', type=int,
+parser.add_argument('--data', default='0', type=int,
                     help='choice of dataset, 0-Scene15, 1-Caltech101, 2-Reuters10, 3-NoisyMNIST,'
                          '4-DeepCaltech, 5-DeepAnimal, 6-MNISTUSPS')
 parser.add_argument('-li', '--log-interval', default='1', type=int, help='interval for logging info')
@@ -29,8 +29,8 @@ parser.add_argument('--gpu', default='1', type=str, help='GPU device idx to use.
 parser.add_argument('-r', '--robust', default=True, type=bool, help='use our robust loss or not')
 parser.add_argument('-t', '--switching-time', default=1.0, type=float, help='start fine when neg_dist>=t*margin')
 parser.add_argument('-s', '--start-fine', default=False, type=bool, help='flag to start use robust loss or not')
-parser.add_argument('--settings', default=0, type=int, help='0-PVP, 1-PSP, 2-Both')
-parser.add_argument('-ap', '--aligned-prop', default='0.5', type=float,
+parser.add_argument('--settings', default=2, type=int, help='0-PVP, 1-PSP, 2-Both')
+parser.add_argument('-ap', '--aligned-prop', default='1.0', type=float,
                     help='originally aligned proportions in the partially view-unaligned data')
 parser.add_argument('-cp', '--complete-prop', default='1.0', type=float,
                     help='originally complete proportions in the partially sample-missing data')
@@ -201,11 +201,12 @@ def main():                                                                     
     criterion_ncl = NoiseRobustLoss().to(device)
     criterion_mse = nn.MSELoss().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learn_rate)
-    if not os.path.exists("./log/"):
+    if not os.path.exists('./log/'):
         os.mkdir("./log/")
-    path = os.path.join("./log/" + str(data_name[args.data]) + "_" + 'time=' + time
+        if not os.path.exists('./log/' + str(data_name[args.data]) + '/'):
+            os.mkdir('./log/' + str(data_name[args.data]) + '/')
+    path = os.path.join("./log/" + str(data_name[args.data]) + "/" + 'time=' + time
                         .strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
-    os.mkdir(path)
 
     log_format = '%(message)s'
     logging.basicConfig(stream=sys.stdout, level=logging.INFO, format=log_format, datefmt='%m/%d %I:%M:%S %p')
