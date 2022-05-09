@@ -20,10 +20,19 @@ The Scene-15 and Reuters-dim10 datasets are placed in "datasets" folder. Another
 
 ## Demo
 
- Train a model by
+ Train a model with different settings
 
 ```bash
-python run.py --data 0 --gpu 0 --settings 2 --aligned-prop 1.0 --complete-prop 1.0
+# Partially Aligned
+python run.py --data 0 --gpu 0 --settings 0 --aligned-prop 0.5 --complete-prop 1.0
+# Fully Aligned
+python run.py --data 0 --gpu 0 --settings 0 --aligned-prop 1.0 --complete-prop 1.0
+# Incomplete
+python run.py --data 0 --gpu 0 --settings 1 --aligned-prop 1.0 --complete-prop 0.5
+# Complete
+python run.py --data 0 --gpu 0 --settings 1 --aligned-prop 1.0 --complete-prop 1.0
+# PVP + PSP
+python run.py --data 0 --gpu 0 --settings 2 --aligned-prop 0.5 --complete-prop 0.5
 ```
 
   - `--data`: choice of datasets.
