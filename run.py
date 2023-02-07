@@ -12,7 +12,7 @@ from sure_inference import both_infer
 from data_loader import loader
 
 
-parser = argparse.ArgumentParser(description='MvCLN in PyTorch')
+parser = argparse.ArgumentParser(description='SURE in PyTorch')
 parser.add_argument('--data', default='0', type=int,
                     help='choice of dataset, 0-Scene15, 1-Caltech101, 2-Reuters10, 3-NoisyMNIST,'
                          '4-DeepCaltech, 5-DeepAnimal, 6-MNISTUSPS')
