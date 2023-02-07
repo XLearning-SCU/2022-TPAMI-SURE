@@ -59,9 +59,9 @@ def load_data(dataset, neg_prop, aligned_prop, complete_prop, is_noise):
     train_label, test_label = label[train_idx], label[test_idx]
     train_X, train_Y, test_X, test_Y = data[0][train_idx], data[1][train_idx], data[0][test_idx], data[1][test_idx]
 
-    # Use test_prop*sizeof(all data) to train the MvCLN, and shuffle the rest data to simulate the unaligned data.
-    # Note that, MvCLN establishes the correspondence of the all data rather than the unaligned portion in the testing.
-    # When test_prop = 0, MvCLN is directly performed on the all data without shuffling.
+    # Use test_prop*sizeof(all data) to train the SURE, and shuffle the rest data to simulate the unaligned data.
+    # Note that, SURE establishes the correspondence of the all data rather than the unaligned portion in the testing.
+    # When test_prop = 0, SURE is directly performed on the all data without shuffling.
     if aligned_prop == 1:
         all_data.append(train_X.T)
         all_data.append(train_Y.T)
