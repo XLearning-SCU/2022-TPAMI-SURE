@@ -203,8 +203,8 @@ def main():                                                                     
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learn_rate)
     if not os.path.exists('./log/'):
         os.mkdir("./log/")
-        if not os.path.exists('./log/' + str(data_name[args.data]) + '/'):
-            os.mkdir('./log/' + str(data_name[args.data]) + '/')
+    if not os.path.exists('./log/' + str(data_name[args.data]) + '/'):
+        os.mkdir('./log/' + str(data_name[args.data]) + '/')
     path = os.path.join("./log/" + str(data_name[args.data]) + "/" + 'time=' + time
                         .strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
