@@ -59,9 +59,7 @@ def load_data(dataset, neg_prop, aligned_prop, complete_prop, is_noise):
     train_label, test_label = label[train_idx], label[test_idx]
     train_X, train_Y, test_X, test_Y = data[0][train_idx], data[1][train_idx], data[0][test_idx], data[1][test_idx]
 
-    # Use test_prop*sizeof(all data) to train the MvCLN, and shuffle the rest data to simulate the unaligned data.
-    # Note that, MvCLN establishes the correspondence of the all data rather than the unaligned portion in the testing.
-    # When test_prop = 0, MvCLN is directly performed on the all data without shuffling.
+    # SURE use aligned and complete portion for training
     if aligned_prop == 1:
         all_data.append(train_X.T)
         all_data.append(train_Y.T)
@@ -83,7 +81,8 @@ def load_data(dataset, neg_prop, aligned_prop, complete_prop, is_noise):
         identy_mask = np.ones((len(train_label), 2))
         mask = np.concatenate((identy_mask, test_mask))
 
-    # pair construction. view 0 and 1 refer to pairs constructed for training. noisy and real labels refer to 0/1 label of those pairs
+    # pair construction. view 0 and 1 refer to pairs constructed for training.
+    # noisy and real labels refer to 0/1 correspondence of those pairs
     if aligned_prop == 1.:
         valid_idx = np.logical_and(mask[:, 0], mask[:, 1])
     else:
@@ -98,10 +97,10 @@ def load_data(dataset, neg_prop, aligned_prop, complete_prop, is_noise):
     print('noise rate of the constructed neg. pairs is ', round(count / (len(noisy_labels) - len(train_X)), 2))
 
     if is_noise:  # training with noisy negative correspondence
-        print("----------------------Training with noisy_labels----------------------")
+        print("----------------------Training with noisy_negatives----------------------")
         train_pair_labels = noisy_labels
     else:  # training with gt negative correspondence
-        print("----------------------Training with real_labels----------------------")
+        print("----------------------Training with ground_truth_negatives----------------------")
         train_pair_labels = real_labels
     train_pairs.append(view0.T)
     train_pairs.append(view1.T)
@@ -120,8 +119,10 @@ def get_pairs(train_X, train_Y, neg_prop, train_label):
         real_labels.append(1)
         class_labels0.append(train_label[i])
         class_labels1.append(train_label[i])
-    # construct neg. pairs by taking each sample in view0 as an anchor and randomly sample neg_prop samples from view1,
-    # which may lead to the so called noisy labels, namely, some of the constructed neg. pairs may in the same category.
+    # construct neg. pairs by taking each sample in view0 as an anchor
+    # and randomly sample ``neg_prop" samples from view1,
+    # which may lead to the so-called False Negatives,
+    # namely, some of the constructed neg. pairs may in the same category.
     for j in range(len(train_X)):
         neg_idx = random.sample(range(len(train_Y)), neg_prop)
         for k in range(neg_prop):
@@ -223,7 +224,7 @@ def loader(train_bs, neg_prop, aligned_prop, complete_prop, is_noise, dataset):
     :param neg_prop: negative / positive pairs' ratio
     :param aligned_prop: known aligned proportions for training SURE
     :param complete_prop: known complete proportions for training SURE
-    :param is_noise: training with noisy labels or not, 0 --- not, 1 --- yes
+    :param is_noise: training with noisy negatives or not, 0 --- not, 1 --- yes
     :param dataset: choice of dataset
     :return: train_pair_loader including the constructed pos. and neg. pairs used for training MvCLN, all_loader including originally aligned and unaligned data used for testing MvCLN
     """

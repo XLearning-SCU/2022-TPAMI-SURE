@@ -6,13 +6,14 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 from models import *
 from Clustering import Clustering
 from sure_inference import both_infer
 from data_loader import loader
 
 
-parser = argparse.ArgumentParser(description='MvCLN in PyTorch')
+parser = argparse.ArgumentParser(description='SURE in PyTorch')
 parser.add_argument('--data', default='0', type=int,
                     help='choice of dataset, 0-Scene15, 1-Caltech101, 2-Reuters10, 3-NoisyMNIST,'
                          '4-DeepCaltech, 5-DeepAnimal, 6-MNISTUSPS')
@@ -22,7 +23,7 @@ parser.add_argument('-e', '--epochs', default='80', type=int, help='number of ep
 parser.add_argument('-lr', '--learn-rate', default='1e-3', type=float, help='learning rate of adam')
 parser.add_argument('--lam', default='0.5', type=float, help='hyper-parameter between losses')
 parser.add_argument('-noise', '--noisy-training', type=bool, default=True,
-                    help='training with real labels or noisy labels')
+                    help='training with noisy negatives')
 parser.add_argument('-np', '--neg-prop', default='30', type=int, help='the ratio of negative to positive pairs')
 parser.add_argument('-m', '--margin', default='5', type=int, help='initial margin')
 parser.add_argument('--gpu', default='1', type=str, help='GPU device idx to use.')
@@ -172,12 +173,13 @@ def plot(acc, nmi, ari, args, data_name):
 def main():                                                                     # deep features of Caltech101
     data_name = ['Scene15', 'Caltech101', 'Reuters_dim10', 'NoisyMNIST-30000', '2view-caltech101-8677sample',
                  'AWA-7view-10158sample', 'MNIST-USPS']
-    NetSeed = 64
-    # random.seed(NetSeed)
-    np.random.seed(NetSeed)
+
+    seed = 0
+    # random.seed(seed) #  Uncomment this line if you want to keep the same PVP/PSP data construction
+    np.random.seed(seed)
     torch.backends.cudnn.deterministic = True
-    torch.manual_seed(NetSeed)
-    torch.cuda.manual_seed(NetSeed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
 
     train_pair_loader, all_loader, divide_seed = loader(args.batch_size, args.neg_prop, args.aligned_prop,
                                                         args.complete_prop, args.noisy_training,
@@ -239,7 +241,8 @@ def main():                                                                     
             # logging.info("******** testing ********")
             logging.info(
                 "Clustering: acc={}, nmi={}, ari={}".format(ret['kmeans']['accuracy'],
-                                                            ret['kmeans']['NMI'], ret['kmeans']['ARI']))
+                                                            ret['kmeans']['NMI'],
+                                                            ret['kmeans']['ARI']))
         acc_list.append(ret['kmeans']['accuracy'])
         nmi_list.append(ret['kmeans']['NMI'])
         ari_list.append(ret['kmeans']['ARI'])

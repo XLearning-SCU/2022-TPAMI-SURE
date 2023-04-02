@@ -103,45 +103,54 @@ def both_infer(model, device, all_loader, setting):
             x1 = x1.view(x1.size()[0], -1)
             class_labels.extend((labels.cpu()).numpy())
             h0, h1, _, _ = model(x0, x1)
-            recover_out0 = (torch.empty_like(h0)).to(device)
-            recover_out1 = (torch.empty_like(h1)).to(device)
 
-            fill_num = k
-            C = euclidean_dist(h0, h1)
-            row_idx = C.argsort()
-            col_idx = (C.t()).argsort()
-            # Mij denotes the flag of i-th sample in view 0 and j-th sample in view 1
-            M = torch.logical_and((mask[:, 0].repeat(test_num, 1)).t(), mask[:, 1].repeat(test_num, 1))
-            for i in range(test_num):
-                idx0 = col_idx[i, :][M[col_idx[i, :], i]]  # idx for view 0 to sort and find the non-missing neighbors
-                idx1 = row_idx[i, :][M[i, row_idx[i, :]]]  # idx for view 1 to sort and find the non-missing neighbors
-                if len(idx1) != 0 and len(idx0) == 0:  # i-th sample in view 1 is missing
-                    avg_fill = h1[idx1[0:fill_num], :].sum(dim=0) / fill_num
-                    cnt += (class_labels1[idx1[0:fill_num]] == class_labels1[i]).sum()
-                    missing_cnt += 1
-                    recover_out0[i, :] = h0[i, :]
-                    recover_out1[i, :] = avg_fill  # missing
-                elif len(idx0) != 0 and len(idx1) == 0:
-                    avg_fill = h0[idx0[0:fill_num], :].sum(dim=0) / fill_num
-                    cnt += (class_labels0[idx0[0:fill_num]] == class_labels0[i]).sum()
-                    missing_cnt += 1
-                    recover_out0[i, :] = avg_fill  # missing
-                    recover_out1[i, :] = h1[i, :]
-                elif len(idx0) != 0 and len(idx1) != 0:
-                    recover_out0[i, :] = h0[i, :]
-                    recover_out1[i, :] = h1[i, :]
-                else:
-                    raise Exception('error')
+            # impute missing samples
+            if setting != 0:
+                recover_out0 = (torch.empty_like(h0)).to(device)
+                recover_out1 = (torch.empty_like(h1)).to(device)
+                fill_num = k
+                C = euclidean_dist(h0, h1)
+                row_idx = C.argsort()
+                col_idx = (C.t()).argsort()
+                # Mij denotes the flag of i-th sample in view 0 and j-th sample in view 1
+                M = torch.logical_and((mask[:, 0].repeat(test_num, 1)).t(), mask[:, 1].repeat(test_num, 1))
+                for i in range(test_num):
+                    idx0 = col_idx[i, :][M[col_idx[i, :], i]]  # idx for view 0 to sort and find the non-missing neighbors
+                    idx1 = row_idx[i, :][M[i, row_idx[i, :]]]  # idx for view 1 to sort and find the non-missing neighbors
+                    if len(idx1) != 0 and len(idx0) == 0:  # i-th sample in view 1 is missing
+                        avg_fill = h1[idx1[0:fill_num], :].sum(dim=0) / fill_num
+                        cnt += (class_labels1[idx1[0:fill_num]] == class_labels1[i]).sum()
+                        missing_cnt += 1
+                        recover_out0[i, :] = h0[i, :]
+                        recover_out1[i, :] = avg_fill  # missing
+                    elif len(idx0) != 0 and len(idx1) == 0:
+                        avg_fill = h0[idx0[0:fill_num], :].sum(dim=0) / fill_num
+                        cnt += (class_labels0[idx0[0:fill_num]] == class_labels0[i]).sum()
+                        missing_cnt += 1
+                        recover_out0[i, :] = avg_fill  # missing
+                        recover_out1[i, :] = h1[i, :]
+                    elif len(idx0) != 0 and len(idx1) != 0:
+                        recover_out0[i, :] = h0[i, :]
+                        recover_out1[i, :] = h1[i, :]
+                    else:
+                        raise Exception('error')
+
             if setting == 1:
                 align_out0.extend((recover_out0.cpu()).numpy())
                 align_out1.extend((recover_out1.cpu()).numpy())
                 continue
-            C = euclidean_dist(recover_out0, recover_out1)
-            for i in range(test_num):
-                idx = torch.argsort(C[i, :])
-                C[:, idx[0]] = float("inf")
-                align_out0.append((recover_out0[i, :].cpu()).numpy())
-                align_out1.append((recover_out1[idx[0], :].cpu()).numpy())
+
+            # reestablish the correspondence across views
+            if setting != 1:
+                if setting == 0:
+                    recover_out0 = h0
+                    recover_out1 = h1
+                C = euclidean_dist(recover_out0, recover_out1)
+                for i in range(test_num):
+                    idx = torch.argsort(C[i, :])
+                    C[:, idx[0]] = float("inf")
+                    align_out0.append((recover_out0[i, :].cpu()).numpy())
+                    align_out1.append((recover_out1[idx[0], :].cpu()).numpy())
 
     return np.array(align_out0), np.array(align_out1), np.array(class_labels)
 
