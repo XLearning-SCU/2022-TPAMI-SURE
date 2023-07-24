@@ -4,7 +4,7 @@ PyTorch implementation for[ Robust Multi-view Clustering with Incomplete Informa
 
 ## Requirements
 
-pytorch==1.5.0 
+pytorch>=1.5.0 
 
 numpy>=1.18.2
 
